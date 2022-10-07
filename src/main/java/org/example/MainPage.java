@@ -1,16 +1,17 @@
 package org.example;
 import org.openqa.selenium.*;
-
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+
+import static org.junit.Assert.assertTrue;
+
 
 public class MainPage {
 
     private final static String PAGE_URL = "https://qa-scooter.praktikum-services.ru";
-    private final static  By CHECK_ORDER_BUTTON = By.cssSelector("button.Header_Link__1TAG7");
-    private final static  By ORDER_NUMBER_INPUT_FIELDER = By.cssSelector("input.Input_Input__1iN_Z");
-
-    private final static  By ORDER_BUTTON = By.xpath("/html/body/div/div/div/div[1]/div[2]/button[1]");
+    private final static  By ORDER_BUTTON = By.xpath("/html/body/div/div/div/div[1]/div[2]/button[1]");//By.cssSelector("div.Header_Nav__AGCXC > button.Button_Button__ra12g");//By.xpath("/html/body/div/div/div/div[1]/div[2]/button[1]");
     private final static By NAME = By.xpath("//div[@class='Order_Form__17u6u']/div[1]/input");
     private final static By SURNAME = By.xpath("//div[@class='Order_Form__17u6u']/div[2]/input");
 
@@ -18,8 +19,8 @@ public class MainPage {
 
     private final static By METRO_STATION =
             By.xpath("//div[@class='Order_Form__17u6u']/div[4]"); //поле станции
-    private final static By COOKIE =// By.cssSelector("div.App_CookieConsent__1yUIN > button.App_CookieButton__3cvqF");
-            By.id("rcc-confirm-button");
+    private final  By COOKIE =  By.id("rcc-confirm-button");
+    private final By HOME_FAQ = By.cssSelector("div.Home_FAQ__3uVm4");
 
     private final static By METRO_STATION_CHOICE =
             By.xpath("//div[@class='select-search__select']/ul/li/button/div[2]");// выбора станции, выбор элемента списка для тестового набора
@@ -32,26 +33,23 @@ public class MainPage {
     private final static  By RENT_CHOICE =
             By.xpath("//div[@class='Dropdown-menu']/div[2]");
     private final static  By CLICK_ORDER_BUTTON =
-            By.xpath("/html/body/div/div/div[2]/div[3]/button[2]");
-    private final static  By CLICK_NEXT_ORDER_BUTTON =
-            By.xpath("//div[@class='Order_Modal__YZ-d3']/div[2]/button[2]");
+           By.xpath("//div[@class='Order_Buttons__1xGrp']/button[2]"); //кнопка заказать в форме аренды
+    private final   By ORDER_CREATED_SUCCESSFULLY = By.xpath("//*[contains(text(), 'Заказ оформлен')]");
+
+    private final   By BUTTON_ORDER_BELOW = By.cssSelector("div.Home_RoadMap__2tal_ > div.Home_FinishButton__1_cWm > button");
+    private final   By  ORDER_CONFIRM_BUTTON = By.xpath("//div[@class='Order_Modal__YZ-d3']/div[2]/button[2]"); //модальное окно подтверждения заказа, кнопка "Да"
+
     private final WebDriver driver;
+
     public MainPage(WebDriver driver){
         this.driver=driver;
     }
-    public MainPage clicksCheckOrderStatusButton(){
-        driver.findElement(CHECK_ORDER_BUTTON).click();
-        return this;
-    }
-    public MainPage enterOrderNumber(String orderNumber){
-        driver.findElement(ORDER_NUMBER_INPUT_FIELDER).sendKeys(orderNumber);
-        return this;
-    }
 
 
-   public MainPage clickOrderButton(){
+
+   public void clickOrderButton(){
         driver.findElement(ORDER_BUTTON).click();
-       return this;
+
 }
     public void name(String name){
 
@@ -97,15 +95,42 @@ public MainPage rent (){
     driver.findElement(RENT_CHOICE).click();
     return this;
 }
-
-    public MainPage clickOrderButtonInRentPage(){
-        driver.findElement(CLICK_ORDER_BUTTON).click();
-        return this; }
-
-    public MainPage clicksNextOrderButton(){
-        driver.findElement(CLICK_NEXT_ORDER_BUTTON).click();
-        return this;
+    public boolean isOrderCreated() {
+        try {
+            return driver.findElement(ORDER_CREATED_SUCCESSFULLY).isDisplayed();
+        } catch (NoSuchElementException e) {
+            return false;
+        }
     }
+
+    private boolean isOrderButton(){
+        return (driver.findElement(ORDER_BUTTON) != null);
+    }
+
+    public void clickOrderButtonInRentPage(){
+        driver.findElement(CLICK_ORDER_BUTTON).click();
+
+         }
+
+    public void clicksNextOrderButton(){
+        scrollToOrderButton();
+        driver.findElement(BUTTON_ORDER_BELOW).click();
+
+           }
+    private void checkOrderButtonClickable() {
+        new WebDriverWait(driver, (5)).until(ExpectedConditions.elementToBeClickable(BUTTON_ORDER_BELOW));
+    }
+
+    private void scrollToOrderButton() {
+        new WebDriverWait(driver, (5)).until(ExpectedConditions.visibilityOfElementLocated(BUTTON_ORDER_BELOW));
+                WebElement elementOrderButton = driver.findElement(BUTTON_ORDER_BELOW);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", elementOrderButton);
+    }
+
+    private void clickRoadMapOrderButton() {
+        driver.findElement(BUTTON_ORDER_BELOW).click();
+    }
+
     public MainPage open() {
         driver.get(PAGE_URL);
         return this;
@@ -120,12 +145,22 @@ public MainPage rent (){
         driver.findElement(buttonText).click();
     }
 public void scrollQuestions(){
-    WebElement element = driver.findElement(By.id("accordion__heading-0"));
-    ((JavascriptExecutor)driver).executeScript("arguments[0].scrollIntoView();", element);
+    new WebDriverWait(driver, (5)).until(ExpectedConditions.visibilityOfElementLocated(HOME_FAQ));
+    WebElement elementFAQ = driver.findElement(HOME_FAQ);
+    ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", elementFAQ);
 
 }
+    public void clickButtonHeader(){
+        assertTrue("Кнопка не найдена", isOrderButton());
+        clickOrderButton();
+    }
+    public void orderConfirmButton() {
+        driver.findElement(ORDER_CONFIRM_BUTTON).click();
+    }
+
 
     public boolean isAnswerVisible(String constantText, int index) {
-        return false;
+        By panelAnswer = By.id("accordion__panel-" + index);
+        return driver.findElement(panelAnswer).isDisplayed();
     }
 }
