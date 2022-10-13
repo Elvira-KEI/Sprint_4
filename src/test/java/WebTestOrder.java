@@ -21,7 +21,6 @@ public class WebTestOrder {
         private final String address;
         private final String phoneNumber;
 
-
         public WebTestOrder(String name, String surname, String address, String phoneNumber){
             this.name = name;
             this.surname = surname;
